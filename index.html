@@ -1,0 +1,256 @@
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="assets/javascripts/spinner.js"></script>
+    <script type="text/javascript" src="assets/javascripts/PapaParse/papaparse.js"></script>
+    <link rel="stylesheet" type="text/css" href="assets/stylesheets/bootstrap.css">
+
+    <title>Home</title>
+
+    <script type="text/javascript">
+        // Load the Visualization API and the corechart package.
+        function canAccessGoogleVisualization() {
+            if ((typeof google === 'undefined') || (typeof google.visualization === 'undefined')) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        if (!canAccessGoogleVisualization()) {
+            google.charts.load('current', {
+                'packages': ['corechart', 'charteditor', 'controls']
+            });
+
+            // Set a callback to run when the Google Visualization API is loaded.
+            google.charts.setOnLoadCallback(drawChart);
+        }
+
+        var chart;
+        var chartEditor;
+        var wrapper;
+        var newWrapper;
+        var spinner;
+        var target;
+        var dashboard;
+        var rangeSlider;
+
+        function loadChartData() {
+          var d = $.get("assets/other/tweet_count.csv");
+          var hashtags =  Papa.parse(d);
+
+          console.log(hashtags);
+
+          /*
+          var data = new google.visualization.DataTable();
+
+          var objs = Object.keys(hashtags).map(function(k) { return hashtags[k] });
+          var rowlist = [];
+          objs.forEach(function(entry) {
+            rowlist.push([entry["h_tag"], entry["h_count"]])
+          });
+        
+          data.addColumn('string', "Hashtag");
+          data.addColumn('number', 'Hashtag Count');
+          data.addRows(rowlist)
+
+          return data;
+          */
+        }
+
+        function loadEditor(chart_wrapper) {
+            console.log("loadEditor")
+            google.visualization.events.addListener(chartEditor, 'ok', redrawChart);
+            chartEditor.openDialog(chart_wrapper, {});
+        }
+
+        function drawChart(chart_type = 'BarChart') {
+            // data = getData();
+
+            // Create the temporary data table.
+            // var data = new google.visualization.DataTable();
+            //data.addColumn('string', 'Topping');
+            //data.addColumn('number', 'Hashtag Count');
+
+            data = loadChartData();
+
+            // Set chart options
+            var options = {
+                title: "Frequency of Tweets"
+            };
+
+            // Instantiate and draw our chart, passing in some options.              
+            wrapper = new google.visualization.ChartWrapper({
+                containerId: 'chart_div'
+            });
+
+            wrapper.setChartType(chart_type)
+            wrapper.setDataTable(data)
+            wrapper.setOptions(options)
+
+            var chart_div = document.getElementById('chart_div');
+            var edit_chart_button = document.getElementById('edit_chart');
+            edit_chart_button.outerHTML = '<button type="button" id="edit_chart">Edit Chart</button>';
+
+            document.getElementById('edit_chart').addEventListener('click', function() {
+                console.log("editChart");
+                loadEditor(wrapper);
+            });
+
+            google.visualization.events.addListener(wrapper, 'ready', function() {
+                readyWrapper();
+                console.log("wrapper ready event");
+            });
+
+            // Create a dashboard.
+            dashboard = new google.visualization.Dashboard(
+                document.getElementById('dashboard_div'));
+
+            // Create a range slider, passing some options
+            rangeSlider = new google.visualization.ControlWrapper({
+                'controlType': 'NumberRangeFilter',
+                'containerId': 'filter_div',
+                'options': {
+                    'filterColumnLabel': 'Hashtag Count'
+                }
+            });
+
+            dashboard.bind(rangeSlider, wrapper);
+
+            // Draw the dashboard.
+            dashboard.draw(data);
+            chartEditor = new google.visualization.ChartEditor();
+        }
+
+        // On "OK" save the chart to a <div> on the page.
+        function redrawChart() {
+            console.log("redrawChart")
+            newWrapper = chartEditor.getChartWrapper();
+            google.visualization.events.addListener(newWrapper, 'ready', readyNewWrapper);
+            dashboard.bind(rangeSlider, newWrapper);
+            newWrapper.draw(document.getElementById('chart_div'));
+            var uri = newWrapper.getChart().getImageURI();
+            document.getElementById("printable_version").outerHTML = '<a id="printable_version" href="' +
+                uri + '">Printable version</a>';
+        }
+
+        function readyWrapper() {
+            console.log("readyWrapper")
+            var uri = wrapper.getChart().getImageURI();
+            document.getElementById("printable_version").outerHTML = '<a id="printable_version" href="' +
+                uri + '">Printable version</a>';
+        }
+
+        function readyNewWrapper() {
+            console.log("readyNewWrapper")
+            var uri = newWrapper.getChart().getImageURI();
+
+            // Make printable version get image of redrawn chart 
+            document.getElementById("printable_version").outerHTML = '<a id="printable_version" href="' +
+                uri + '">Printable version</a>';
+        }
+
+        window.addEventListener("DOMContentLoaded", function() {
+            chart_div = document.createElement('div');
+            chart_div.id = "chart_div";
+            chart_div.class = "google_chart"
+
+            var opts = {
+                lines: 12 // The number of lines to draw
+                    ,
+                length: 7 // The length of each line
+                    ,
+                width: 5 // The line thickness
+                    ,
+                radius: 10 // The radius of the inner circle
+                    ,
+                scale: 1.0 // Scales overall size of the spinner
+                    ,
+                corners: 1 // Roundness (0..1)
+                    ,
+                color: '#000' // #rgb or #rrggbb
+                    ,
+                opacity: 1 / 4 // Opacity of the lines
+                    ,
+                rotate: 0 // Rotation offset
+                    ,
+                direction: 1 // 1: clockwise, -1: counterclockwise
+                    ,
+                speed: 2 // Rounds per second
+                    ,
+                trail: 100 // Afterglow percentage
+                    ,
+                fps: 20 // Frames per second when using setTimeout()
+                    ,
+                zIndex: 2e9 // Use a high z-index by default
+                    ,
+                className: 'my_spin' // CSS class to assign to the element
+                    ,
+                top: '50%' // center vertically
+                    ,
+                left: '50%' // center horizontally
+                    ,
+                shadow: false // Whether to render a shadow
+                    ,
+                hwaccel: false // Whether to use hardware acceleration (might be buggy)
+                    ,
+                position: 'absolute' // Element positioning
+            }
+
+            target = document.getElementById('chart_div');
+            spinner = new Spinner(opts);
+            spinner.spin(target);
+            console.log("Loading...");
+        }, false);
+    </script>
+</head>
+
+<body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">QAC Tweet Analysis</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="index.html">Home</a>
+                    </li>
+                    <li>
+                      <a href="congress_map.html">Congress Map</a>
+                    </li>
+                    <!--
+                    <li>
+                        <%=link_to "Add Data", tweet_counts_path%>
+                    </li>
+                    -->
+                    <li>
+                        <a href="about.html">About Us</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="dashboard_div">
+        <div id='edit_chart'></div>
+        <div id="printable_version"></div>
+        <div id="filter_div"></div>
+        <div id="chart_div"></div>
+    </div>
+</body>
+</html>

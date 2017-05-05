@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+  <head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://d3js.org/queue.v1.min.js"></script>
+    <script src="http://d3js.org/topojson.v1.min.js"></script>
+    <script type="text/javascript" src="assets/javascripts/spinner.js"></script>
+    <link rel="stylesheet" type="text/css" href="assets/stylesheets/bootstrap.css">
+
+    <title>Congressional Map</title>
+
+    <script type="text/javascript">
+    function loadMap() {
+      console.log("Starting map script");
+      var width = 960,
+          height = 600;
+
+      var projection = d3.geo.albersUsa()
+          .scale(1280)
+          .translate([width / 2, height / 2]);
+
+      var path = d3.geo.path()
+          .projection(projection);
+
+      var svg = d3.select("body").append("svg")
+          .attr("width", width)
+          .attr("height", height)
+          .call(d3.behavior.zoom().scaleExtent([1, 8]).on("zoom", zoom))
+          .append("g");
+
+      function zoom() {
+        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+      }
+
+      queue()
+          .defer(d3.json, "assets/other/us.json")
+          .defer(d3.json, "assets/other/us-congress-113.json")
+          .await(ready);
+
+      function ready(error, us, congress) {
+        if (error) throw error;
+
+        svg.append("defs").append("path")
+            .attr("id", "land")
+            .datum(topojson.feature(us, us.objects.land))
+            .attr("d", path);
+
+        svg.append("clipPath")
+            .attr("id", "clip-land")
+          .append("use")
+            .attr("xlink:href", "#land");
+
+        svg.append("g")
+            .attr("class", "districts")
+            .attr("clip-path", "url(#clip-land)")
+          .selectAll("path")
+            .data(topojson.feature(congress, congress.objects.districts).features)
+          .enter().append("path")
+            .attr("d", path)
+          .append("title")
+            .text(function(d) { return d.id; });
+
+        svg.append("path")
+            .attr("class", "district-boundaries")
+            .datum(topojson.mesh(congress, congress.objects.districts, function(a, b) { return a !== b && (a.id / 1000 | 0) === (b.id / 1000 | 0); }))
+            .attr("d", path);
+
+        svg.append("path")
+            .attr("class", "state-boundaries")
+            .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+            .attr("d", path);
+      }
+      d3.select(self.frameElement).style("height", height + "px");
+    }
+    </script>
+    <script>
+      $(document).ready(loadMap);
+      $(document).on('page:change', loadMap);
+    </script>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">QAC Tweet Analysis</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="index.html">Home</a>
+                    </li>
+                    <li>
+                      <a href="congress_map.html">Congress Map</a>
+                    </li>
+                    <!--
+                    <li>
+                        <%=link_to "Add Data", tweet_counts_path%>
+                    </li>
+                    -->
+                    <li>
+                        <a href="about.html">About Us</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+  </body>
+</html>
