@@ -11,7 +11,7 @@
     <link rel="stylesheet" type="text/css" href="assets/stylesheets/bootstrap.css">
 
     <title>Home</title>
-
+    <script type="text/javascript" src="assets/other/tweets.js"></script>
     <script type="text/javascript">
         // Load the Visualization API and the corechart package.
         function canAccessGoogleVisualization() {
@@ -41,26 +41,20 @@
         var rangeSlider;
 
         function loadChartData() {
-          var d = $.get("assets/other/tweet_count.csv");
-          var hashtags =  Papa.parse(d);
-
-          console.log(hashtags);
-
-          /*
+          var rowlist = tweets.map(function(k) { return [k["FIELD1"], parseInt(k["FIELD2"])]; });
           var data = new google.visualization.DataTable();
-
+    /*
           var objs = Object.keys(hashtags).map(function(k) { return hashtags[k] });
           var rowlist = [];
           objs.forEach(function(entry) {
             rowlist.push([entry["h_tag"], entry["h_count"]])
           });
-        
+    */
           data.addColumn('string', "Hashtag");
           data.addColumn('number', 'Hashtag Count');
           data.addRows(rowlist)
 
           return data;
-          */
         }
 
         function loadEditor(chart_wrapper) {
@@ -84,7 +78,7 @@
                 title: "Frequency of Tweets"
             };
 
-            // Instantiate and draw our chart, passing in some options.              
+            // Instantiate and draw our chart, passing in some options.
             wrapper = new google.visualization.ChartWrapper({
                 containerId: 'chart_div'
             });
@@ -150,7 +144,7 @@
             console.log("readyNewWrapper")
             var uri = newWrapper.getChart().getImageURI();
 
-            // Make printable version get image of redrawn chart 
+            // Make printable version get image of redrawn chart
             document.getElementById("printable_version").outerHTML = '<a id="printable_version" href="' +
                 uri + '">Printable version</a>';
         }

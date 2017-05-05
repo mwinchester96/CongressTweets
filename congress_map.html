@@ -10,9 +10,12 @@
     <link rel="stylesheet" type="text/css" href="assets/stylesheets/bootstrap.css">
 
     <title>Congressional Map</title>
-
+    <script id="us-json" type="application/json" src="assets/other/us.json"></script>
+    <script id="us113-json" type="application/json" src="assets/other/us-congress-113.json"></script>
     <script type="text/javascript">
     function loadMap() {
+      var data_us = ($("#us-json").html());
+      console.log(data_us);
       console.log("Starting map script");
       var width = 960,
           height = 600;
@@ -35,8 +38,8 @@
       }
 
       queue()
-          .defer(d3.json, "assets/other/us.json")
-          .defer(d3.json, "assets/other/us-congress-113.json")
+          .defer(d3.json, data_us)
+          .defer(d3.json, JSON.parse($("#us113-json").html()))
           .await(ready);
 
       function ready(error, us, congress) {
